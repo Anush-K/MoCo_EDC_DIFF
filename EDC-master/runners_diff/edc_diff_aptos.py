@@ -118,13 +118,43 @@ def main_worker(gpu, args):
         drop_last=False,
     )
 
+    # model = R50_R50(
+    #     img_size=args.img_size,
+    #     train_encoder=True,
+    #     stop_grad=True,
+    #     reshape=True,
+    #     bn_pretrain=False,
+    # )
     model = R50_R50(
         img_size=args.img_size,
-        train_encoder=True,
+        train_encoder=False,   
         stop_grad=True,
         reshape=True,
         bn_pretrain=False,
     )
+    # =====================================================
+    # 🔥 Load MoCo Pretrained Backbone (APTOS NORMAL SSL)
+    # =====================================================
+
+    moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_aptos_normal_resnet50.pth"
+
+    if os.path.exists(moco_path):
+        print("Loading MoCo backbone from:", moco_path)
+        
+        checkpoint = torch.load(moco_path, map_location="cpu")
+        state_dict = checkpoint["encoder_q"]
+
+        # Remove projection head (fc layers)
+        state_dict = {k: v for k, v in state_dict.items() if not k.startswith("fc")}
+
+        missing, unexpected = model.edc_encoder.load_state_dict(state_dict, strict=False)
+
+        print("MoCo weights loaded.")
+        print("Missing keys:", missing)
+        print("Unexpected keys:", unexpected)
+    else:
+        print("!!! MoCo checkpoint not found. Using default ImageNet weights. !!!")
+
 
     # Add Latent Diffusion Model
     diffusion = LatentDiffusion(

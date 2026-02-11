@@ -34,7 +34,7 @@ else:
 # Base directory detection
 # --------------------------------------------------
 if ENV == "colab":
-    BASE_DIR = "/content/UAD_EDC_DIFF"
+    BASE_DIR = "/content/MoCo_EDC_DIFF"
 else:
     # Local: assuming config.py is at:
     #   APTOS_EDC/EDC-master/config_aptos.py
