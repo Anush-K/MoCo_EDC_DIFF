@@ -72,7 +72,7 @@ def main_worker(gpu, args):
     logger.warning(f"USE GPU: {args.gpu} for training")
 
     # Construct Dataset & DataLoader
-    train_dset = AD_Dataset(name=args.dataset, train=True, data_dir=args.data_dir)
+    train_dset = AD_Dataset(name=args.dataset, train=True, data_dir=args.data_dir, train_samples_limit=args.num_normal)
     train_dset = train_dset.get_dset()
     print("TrainSet Image Number:", len(train_dset))
     eval_dset = AD_Dataset(name=args.dataset, train=False, data_dir=args.data_dir)
@@ -502,6 +502,7 @@ if __name__ == "__main__":
     parser.add_argument('--epoch', type=int, default=1)
     parser.add_argument('--num_train_iter', type=int, default=1000,
                         help='total number of training iterations')
+    parser.add_argument('--num_normal', type=int, default=10000, help='Number of NORMAL training images to use')
     parser.add_argument('--num_eval_iter', type=int, default=250,
                         help='evaluation frequency')
     parser.add_argument('-bsz', '--batch_size', type=int, default=32)
