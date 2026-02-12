@@ -118,25 +118,26 @@ def main_worker(gpu, args):
         drop_last=False,
     )
 
-    # model = R50_R50(
-    #     img_size=args.img_size,
-    #     train_encoder=True,
-    #     stop_grad=True,
-    #     reshape=True,
-    #     bn_pretrain=False,
-    # )
     model = R50_R50(
         img_size=args.img_size,
-        train_encoder=False,   
+        train_encoder=True,
         stop_grad=True,
         reshape=True,
         bn_pretrain=False,
     )
+    # model = R50_R50(
+    #     img_size=args.img_size,
+    #     train_encoder=False,   
+    #     stop_grad=True,
+    #     reshape=True,
+    #     bn_pretrain=False,
+    # )
     # =====================================================
-    # 🔥 Load MoCo Pretrained Backbone (APTOS NORMAL SSL)
+    # 🔥 Load MoCo Pretrained Backbone (APTOS or REFUGE NORMAL SSL)
     # =====================================================
 
-    moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_aptos_normal_resnet50.pth"
+    #moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_aptos_normal_resnet50.pth"
+    moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_refuge_normal_resnet50.pth"
 
     if os.path.exists(moco_path):
         print("Loading MoCo backbone from:", moco_path)
