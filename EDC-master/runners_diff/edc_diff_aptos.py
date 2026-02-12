@@ -346,7 +346,7 @@ def main_worker(gpu, args):
         specificity
     ]
     })
-    print("\n================ FINAL FUSED EVALUATION METRICS - ISIC2018 ================\n")
+    print("\n================ FINAL FUSED EVALUATION METRICS - APTOS ================\n")
     print(metrics_table.to_string(index=False, float_format="%.4f"))
 
     # ================================
