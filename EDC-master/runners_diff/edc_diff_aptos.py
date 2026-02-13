@@ -135,8 +135,8 @@ def main_worker(gpu, args):
     # =====================================================
     # 🔥 Load MoCo Pretrained Backbone (APTOS or REFUGE NORMAL SSL)
     # =====================================================
-
-    moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_aptos_normal1000_200ep.pth"
+    moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_aptos_pretrain_500N_200ep.pth"
+    #moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_aptos_normal1000_200ep.pth"
     #moco_path = "/content/drive/MyDrive/EDC_SSL_Weights/moco_refuge_normal_resnet50.pth"
     
 
