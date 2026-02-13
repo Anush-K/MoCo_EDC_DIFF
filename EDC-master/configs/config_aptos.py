@@ -52,7 +52,10 @@ CODE_DIR = os.path.join(BASE_DIR, "EDC-master")
 #   APTOS/
 #      ├── train/NORMAL
 #      └── test/NORMAL / ABNORMAL
-DATASET_DIR = os.path.join(BASE_DIR, "APTOS")
+if os.path.exists(os.path.join(BASE_DIR, "MoCo_APTOS")):
+    DATASET_DIR = os.path.join(BASE_DIR, "MoCo_APTOS")
+else:
+    DATASET_DIR = os.path.join(BASE_DIR, "APTOS")
 
 TRAIN_DIR = os.path.join(DATASET_DIR, "train")
 TEST_DIR  = os.path.join(DATASET_DIR, "test")
