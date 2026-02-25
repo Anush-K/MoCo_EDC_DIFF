@@ -56,6 +56,7 @@ class EDC:
 
         self.optimizer = None
         self.scheduler = None
+        self.diffusion_optimizer = None
 
         self.it = 0
         self.logger = logger
@@ -95,7 +96,6 @@ class EDC:
         start_batch.record()
 
         best_eval_auc, best_it = 0.0, 0
-
         scaler = GradScaler()
         amp_cm = autocast if args.amp else contextlib.nullcontext
 
@@ -105,6 +105,7 @@ class EDC:
             print(eval_dict)
 
         train_log = []
+
         for idx, x, _, y, filename in tqdm(self.loader_dict['train']):
 
             # prevent the training iterations exceed args.num_train_iter
@@ -154,10 +155,17 @@ class EDC:
                 result = self.model(x)
                 edc_loss = result['loss'].mean()
 
-                e3 = self.model.edc_encoder(x)[2]
+                # e3 = self.model.edc_encoder(x)[2]
+                # # #normalize e3 for stable diffusion training
+                # # #e3 = torch.nn.functional.normalize(e3, dim=1)
+                # # Normalize ONLY for diffusion
+                # e3_norm = torch.nn.functional.normalize(e3, dim=1)
+
+
 
                 if self.diffusion is not None:
-                    diff_loss = self.diffusion.compute_loss(e3.detach())
+                    #diff_loss = self.diffusion.compute_loss(e3.detach())
+                    diff_loss = self.diffusion.compute_loss(e3_norm.detach())
                     total_loss = edc_loss + args.lambda_diff * diff_loss
                 else:
                     diff_loss = torch.tensor(0.0, device=device)
@@ -173,18 +181,41 @@ class EDC:
                 scaler.step(self.optimizer)
                 scaler.update()
             else:
-                total_loss.backward()
+                # -------------------------
+                # Backprop EDC
+                # -------------------------
+                self.optimizer.zero_grad()
+                edc_loss.backward()
+
                 if args.clip > 0:
-                    total_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), args.clip)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), args.clip)
+
                 self.optimizer.step()
 
+                # -------------------------
+                # Backprop Diffusion
+                # -------------------------
+                if self.diffusion is not None:
+                    self.diffusion_optimizer.zero_grad()
+                    diff_loss.backward()
 
-            # ADD: update EMA for diffusion UNet
-            if hasattr(self, "diffusion") and hasattr(self.diffusion, "update_ema"):
-                self.diffusion.update_ema()
+                    torch.nn.utils.clip_grad_norm_(self.diffusion.parameters(), 1.0)
 
-            self.scheduler.step()
-            self.model.zero_grad()
+                    self.diffusion_optimizer.step()
+
+                    self.diffusion.update_ema()
+
+                # Step scheduler for EDC only
+                self.scheduler.step()
+
+
+
+            # # ADD: update EMA for diffusion UNet
+            # if hasattr(self, "diffusion") and hasattr(self.diffusion, "update_ema"):
+            #     self.diffusion.update_ema()
+
+            # self.scheduler.step()
+            # self.model.zero_grad()
 
             # --- end run timing ---
             if USE_MPS:
@@ -226,6 +257,14 @@ class EDC:
                 if tb_dict['eval/AUC'] > best_eval_auc:
                     best_eval_auc = tb_dict['eval/AUC']
                     best_it = self.it
+                    # Save best EDC model
+                    self.save_model('best_model.pth', save_path)
+                    # Save best diffusion model
+                    if self.diffusion is not None:
+                        torch.save(
+                            self.diffusion.state_dict(),
+                            os.path.join(save_path, 'best_diffusion.pth')
+                        )
 
                 self.print_fn(
                     f"{self.it} iteration, {tb_dict}, BEST_EVAL_AUC: {best_eval_auc}, at {best_it} iters")
@@ -261,7 +300,7 @@ class EDC:
         y2_prob = []
         y3_prob = []
 
-        # with self.diffusion.ema_scope():
+        # diffusion.ema_scope():
         ema_cm = self.diffusion.ema_scope() if self.diffusion is not None else contextlib.nullcontext()
 
         with ema_cm:
