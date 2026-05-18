@@ -79,3 +79,4 @@ def print_config():
     print(f"MoCo weights:    {MOCO_WEIGHTS}")
     print(f"Saved models:    {SAVED_MODELS_DIR}")
     print("================================")
+    print("-------------------------------")
